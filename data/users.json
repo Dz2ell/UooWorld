@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "dzellia",
+      "email": "egorfamile@yandex.ru",
+      "password_hash": "$2a$10$PZBjTmZOuYFtcbaICIkFu.cQU8chh3iYBMFsa6v6fnhC6hVo3oYnO",
+      "minecraft_username": "dzellia",
+      "bio": "у меня есть хороший друг, который отлично использует Photoshop",
+      "discord_username": "@dze.lli",
+      "avatar_url": null,
+      "level": 4,
+      "created_at": "2025-12-09T11:49:36.894Z",
+      "updated_at": "2025-12-11T16:02:51.544Z",
+      "totp_secret": "NVAEYWDTFA4GMU26NBCVUPZFNBLV4YLM"
+    },
+    {
+      "id": 2,
+      "username": "keper224",
+      "email": "egord1@icloud.com",
+      "password_hash": "$2a$10$QMrUCaIFy2J5EiUj3WzBtOYDdnaAjItu4aD5HyVCUoIwX.vKG64Fm",
+      "minecraft_username": "kiper224",
+      "bio": "Просто играю на лучше проект в 2026 году :)",
+      "discord_username": "@kiper224",
+      "avatar_url": null,
+      "level": 1,
+      "role_title": null,
+      "created_at": "2025-12-09T14:58:20.974Z",
+      "updated_at": "2025-12-09T18:37:49.495Z",
+      "totp_secret": "JU5G4S3NMNHXG6BDIB5CS6SMFZ5T4JKI",
+      "totp_enabled": true
+    }
+  ]
+}
