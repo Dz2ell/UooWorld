@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила — UooWorld</title>
+    <meta name="description" content="Правила сервера UooWorld">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="/js/i18n.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        body.theme-light {
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .navbar-blur {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .grid-pattern {
+            background-image:
+                linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .glow-green {
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+        }
+
+        .rule-card {
+            transition: all 0.3s ease;
+        }
+
+        .rule-card:hover {
+            transform: translateX(8px);
+            border-left-color: #22c55e;
+        }
+
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body class="grid-pattern">
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-blur border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div
+                        class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center glow-green group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-cube text-dark-900 text-lg sm:text-xl"></i>
+                    </div>
+                    <span
+                        class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">UooWorld</span>
+                </a>
+
+                <!-- Right section -->
+                <div class="flex items-center space-x-4">
+                    <!-- Server Status -->
+                    <div id="serverStatus"
+                        class="hidden sm:flex items-center space-x-2 bg-dark-700/50 px-3 py-1.5 rounded-lg border border-white/5">
+                        <span class="w-2 h-2 rounded-full bg-gray-500" id="statusDot"></span>
+                        <span class="text-sm text-gray-400" id="statusText">...</span>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="p-2 text-gray-400 hover:text-accent transition-colors"
+                        title="Toggle theme">
+                        <i class="fa-solid fa-moon text-lg"></i>
+                    </button>
+
+                    <!-- Language Dropdown -->
+                    <div class="dropdown relative">
+                        <button
+                            class="flex items-center space-x-1 p-2 text-gray-400 hover:text-accent transition-colors">
+                            <span id="currentLangFlag">🇷🇺</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div
+                            class="dropdown-menu absolute right-0 top-full mt-2 bg-dark-700 border border-white/10 rounded-xl overflow-hidden min-w-32">
+                            <button onclick="setLang('ru')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2">
+                                <span>🇷🇺</span><span>Русский</span>
+                            </button>
+                            <button onclick="setLang('en')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2">
+                                <span>🇬🇧</span><span>English</span>
+                            </button>
+                            <button onclick="setLang('uk')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2">
+                                <span>🇺🇦</span><span>Українська</span>
+                            </button>
+                            <button onclick="setLang('lv')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2">
+                                <span>🇱🇻</span><span>Latviešu</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Nav Links -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a href="/" class="text-gray-300 hover:text-accent transition-colors"
+                            data-i18n="nav_home">Главная</a>
+                        <a href="/rules.html" class="text-accent font-medium" data-i18n="nav_rules">Правила</a>
+                        <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                            class="text-gray-300 hover:text-accent transition-colors">Discord</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-16 px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <div
+                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl mb-6">
+                    <i class="fa-solid fa-scroll text-accent text-3xl"></i>
+                </div>
+                <h1 class="text-4xl sm:text-5xl font-bold mb-4">
+                    <span class="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+                        data-i18n="rules_title">Правила сервера</span>
+                </h1>
+                <p class="text-gray-400 text-lg" data-i18n="rules_subtitle">Соблюдай правила — играй с удовольствием</p>
+            </div>
+
+            <!-- Rules List -->
+            <div class="space-y-4">
+                <!-- Rule 1 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">1</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Уважай других игроков</h3>
+                            <p class="text-gray-400">Запрещены оскорбления, унижения, дискриминация и любые формы
+                                токсичного поведения. Относись к другим так, как хочешь, чтобы относились к тебе.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 2 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Запрещён гриферство</h3>
+                            <p class="text-gray-400">Нельзя разрушать или изменять чужие постройки без разрешения
+                                владельца. Воровство также запрещено.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 3 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">3</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Запрещены читы и эксплойты</h3>
+                            <p class="text-gray-400">Использование любых модификаций, дающих преимущество (xray,
+                                killaura, fly и т.д.) приведёт к бану. Баг-абуз также запрещён.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 4 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">4</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Строй красиво</h3>
+                            <p class="text-gray-400">Мы ценим эстетику. Избегай грязных построек и столбов в небо.
+                                Убирай после себя деревья полностью.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 5 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">5</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">PvP только по согласию</h3>
+                            <p class="text-gray-400">PvP разрешено только если оба игрока согласны на бой. Убийство без
+                                согласия — нарушение правил.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 6 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">6</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Соблюдай границы</h3>
+                            <p class="text-gray-400">Не строй слишком близко к чужим базам (минимум 200 блоков). Если
+                                сомневаешься — спроси в Discord.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rule 7 -->
+                <div class="rule-card glass-card rounded-xl p-6 border-l-4 border-accent/30">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center shrink-0">
+                            <span class="text-accent font-bold">7</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white mb-2">Решения модерации — окончательны</h3>
+                            <p class="text-gray-400">Если модератор вынес решение — прими его. Апелляции можно подавать
+                                в специальном канале Discord.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Punishments -->
+            <div class="mt-12 glass-card rounded-2xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-gavel text-accent mr-3"></i>
+                    Наказания
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-center">
+                        <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-yellow-400">1-е нарушение</h4>
+                        <p class="text-gray-400 text-sm mt-1">Предупреждение</p>
+                    </div>
+                    <div class="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+                        <i class="fa-solid fa-clock text-orange-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-orange-400">2-е нарушение</h4>
+                        <p class="text-gray-400 text-sm mt-1">Мут / Временный бан</p>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+                        <i class="fa-solid fa-ban text-red-500 text-2xl mb-2"></i>
+                        <h4 class="font-semibold text-red-400">3-е нарушение</h4>
+                        <p class="text-gray-400 text-sm mt-1">Перманентный бан</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back link -->
+            <div class="mt-8 text-center">
+                <a href="/"
+                    class="text-gray-500 hover:text-accent transition-colors inline-flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span data-i18n="auth_back_home">Вернуться на главную</span>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            toggleTheme();
+            updateThemeIcon();
+        });
+
+        function updateThemeIcon() {
+            const icon = themeToggle.querySelector('i');
+            if (getCurrentTheme() === 'dark') {
+                icon.className = 'fa-solid fa-moon text-lg';
+            } else {
+                icon.className = 'fa-solid fa-sun text-lg';
+            }
+        }
+
+        // Update language flag
+        function updateLangFlag() {
+            const flag = document.getElementById('currentLangFlag');
+            const flags = { ru: '🇷🇺', en: '🇬🇧', uk: '🇺🇦', lv: '🇱🇻' };
+            flag.textContent = flags[getCurrentLang()] || '🇷🇺';
+        }
+
+        // Server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('https://api.mcsrvstat.us/3/play.uooworld.net');
+                const data = await response.json();
+
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+
+                if (data.online) {
+                    dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                    text.textContent = `${data.players?.online || 0} ${t('status_players')}`;
+                    text.className = 'text-sm text-green-400';
+                } else {
+                    dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                    text.textContent = t('status_offline');
+                    text.className = 'text-sm text-red-400';
+                }
+            } catch (err) {
+                console.error('Status check failed:', err);
+            }
+        }
+
+        // Initialize
+        updateThemeIcon();
+        updateLangFlag();
+        checkServerStatus();
+    </script>
+</body>
+
+</html>

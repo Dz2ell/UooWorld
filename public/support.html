@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Поддержка — UooWorld</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="/js/i18n.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        body.theme-light {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .navbar-blur {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .status-open {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .status-answered {
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .status-closed {
+            color: #94a3b8;
+            background: rgba(148, 163, 184, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-blur border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-cube text-dark-900"></i>
+                </div>
+                <span class="text-xl font-bold">UooWorld</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 text-gray-400 hover:text-accent"><i
+                        class="fa-solid fa-moon"></i></button>
+                <a href="/" class="text-gray-300 hover:text-accent">Главная</a>
+                <a href="/wiki.html" class="text-gray-300 hover:text-accent">Wiki</a>
+                <a href="/forum.html" class="text-gray-300 hover:text-accent">Форум</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Not logged in -->
+            <div id="loginPrompt" class="hidden text-center py-20">
+                <i class="fa-solid fa-lock text-6xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 text-lg mb-4">Войдите, чтобы создать тикет</p>
+                <a href="/login.html"
+                    class="bg-accent hover:bg-accent-dark text-dark-900 px-6 py-3 rounded-xl font-semibold">Войти</a>
+            </div>
+
+            <!-- User view -->
+            <div id="userView" class="hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <h1 class="text-3xl font-bold text-white">
+                        <i class="fa-solid fa-headset text-accent mr-3"></i>Поддержка
+                    </h1>
+                </div>
+
+                <!-- Create ticket form -->
+                <div class="glass-card rounded-2xl p-6 mb-8">
+                    <h2 class="text-lg font-semibold text-white mb-4">Создать тикет</h2>
+                    <form id="ticketForm" class="space-y-4">
+                        <input type="text" id="ticketSubject" placeholder="Тема обращения"
+                            class="input-field w-full px-4 py-3 rounded-xl text-white" required>
+                        <textarea id="ticketMessage" rows="4" placeholder="Опишите проблему..."
+                            class="input-field w-full px-4 py-3 rounded-xl text-white resize-none" required></textarea>
+                        <button type="submit"
+                            class="bg-accent hover:bg-accent-dark text-dark-900 font-bold py-3 px-6 rounded-xl">
+                            <i class="fa-solid fa-paper-plane mr-2"></i>Отправить
+                        </button>
+                    </form>
+                    <div id="ticketSuccess"
+                        class="hidden mt-4 bg-green-500/10 border border-green-500/30 text-green-400 p-4 rounded-xl text-center">
+                        Тикет создан! Мы скоро ответим.
+                    </div>
+                </div>
+
+                <!-- My tickets -->
+                <h2 class="text-lg font-semibold text-white mb-4">Мои тикеты</h2>
+                <div id="myTickets" class="space-y-3"></div>
+                <div id="noTickets" class="hidden text-center py-10 text-gray-500">
+                    У вас ещё нет тикетов
+                </div>
+            </div>
+
+            <!-- Staff view -->
+            <div id="staffView" class="hidden">
+                <div class="flex items-center justify-between mb-8">
+                    <h1 class="text-3xl font-bold text-white">
+                        <i class="fa-solid fa-headset text-accent mr-3"></i>Все тикеты
+                    </h1>
+                    <div class="flex space-x-2">
+                        <button onclick="filterTickets('all')"
+                            class="filter-btn px-4 py-2 rounded-lg bg-dark-700 text-gray-300"
+                            data-filter="all">Все</button>
+                        <button onclick="filterTickets('open')" class="filter-btn px-4 py-2 rounded-lg text-gray-500"
+                            data-filter="open">Открытые</button>
+                        <button onclick="filterTickets('answered')"
+                            class="filter-btn px-4 py-2 rounded-lg text-gray-500"
+                            data-filter="answered">Отвеченные</button>
+                    </div>
+                </div>
+                <div id="allTickets" class="space-y-3"></div>
+            </div>
+
+            <!-- Ticket detail modal -->
+            <div id="ticketModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+                <div class="glass-card rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-white" id="modalSubject"></h2>
+                            <p class="text-sm text-gray-400"><span id="modalUser"></span> • <span id="modalDate"></span>
+                            </p>
+                        </div>
+                        <button onclick="closeTicketModal()" class="text-gray-400 hover:text-white"><i
+                                class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                    <div class="bg-dark-700/50 rounded-xl p-4 mb-4">
+                        <p class="text-gray-300" id="modalMessage"></p>
+                    </div>
+                    <div id="modalReplies" class="space-y-3 mb-4"></div>
+
+                    <!-- Staff reply form -->
+                    <div id="staffReplyForm" class="hidden border-t border-white/10 pt-4">
+                        <textarea id="replyMessage" rows="3" placeholder="Ваш ответ..."
+                            class="input-field w-full px-4 py-3 rounded-xl text-white resize-none mb-3"></textarea>
+                        <div class="flex items-center justify-between">
+                            <select id="replyStatus"
+                                class="bg-dark-700 border border-white/10 rounded-lg px-3 py-2 text-white">
+                                <option value="">Не менять статус</option>
+                                <option value="answered">Отвечен</option>
+                                <option value="closed">Закрыт</option>
+                            </select>
+                            <button onclick="sendReply()"
+                                class="bg-accent hover:bg-accent-dark text-dark-900 font-bold py-2 px-6 rounded-xl">
+                                Отправить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentUser = null;
+        let allTickets = [];
+        let currentFilter = 'all';
+        let currentTicketId = null;
+
+        async function init() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (!res.ok) {
+                    document.getElementById('loginPrompt').classList.remove('hidden');
+                    return;
+                }
+                const data = await res.json();
+                currentUser = data.user;
+
+                if (currentUser.level >= 2) {
+                    document.getElementById('staffView').classList.remove('hidden');
+                    loadAllTickets();
+                } else {
+                    document.getElementById('userView').classList.remove('hidden');
+                    loadMyTickets();
+                }
+            } catch (e) {
+                document.getElementById('loginPrompt').classList.remove('hidden');
+            }
+        }
+
+        async function loadMyTickets() {
+            const res = await fetch('/api/support/my');
+            const data = await res.json();
+            const container = document.getElementById('myTickets');
+            const empty = document.getElementById('noTickets');
+
+            if (data.tickets.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            container.innerHTML = data.tickets.map(t => renderTicket(t)).join('');
+        }
+
+        async function loadAllTickets() {
+            const res = await fetch('/api/support');
+            const data = await res.json();
+            allTickets = data.tickets;
+            renderAllTickets();
+        }
+
+        function renderAllTickets() {
+            const filtered = currentFilter === 'all' ? allTickets : allTickets.filter(t => t.status === currentFilter);
+            document.getElementById('allTickets').innerHTML = filtered.map(t => renderTicket(t, true)).join('');
+        }
+
+        function filterTickets(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('bg-dark-700', btn.dataset.filter === filter);
+                btn.classList.toggle('text-gray-300', btn.dataset.filter === filter);
+                btn.classList.toggle('text-gray-500', btn.dataset.filter !== filter);
+            });
+            renderAllTickets();
+        }
+
+        function renderTicket(t, showUser = false) {
+            const statusClass = `status-${t.status}`;
+            const statusText = { open: 'Открыт', answered: 'Отвечен', closed: 'Закрыт' }[t.status];
+            return `
+                <div onclick="openTicket(${t.id})" class="glass-card rounded-xl p-4 cursor-pointer hover:border-accent/30 transition-all">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-white">${t.subject}</h3>
+                            <p class="text-sm text-gray-400">${showUser ? t.username + ' • ' : ''}${new Date(t.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function openTicket(id) {
+            currentTicketId = id;
+            const res = await fetch(`/api/support/${id}`);
+            const data = await res.json();
+
+            document.getElementById('modalSubject').textContent = data.ticket.subject;
+            document.getElementById('modalMessage').textContent = data.ticket.message;
+            document.getElementById('modalDate').textContent = new Date(data.ticket.created_at).toLocaleString();
+
+            const user = await fetch('/api/auth/me').then(r => r.json()).catch(() => null);
+            const ticketUser = allTickets.find(t => t.id === id) || data.ticket;
+            document.getElementById('modalUser').textContent = ticketUser.username || 'Вы';
+
+            const repliesHtml = data.replies.map(r => `
+                <div class="bg-dark-700/30 rounded-xl p-3 ${r.level >= 2 ? 'border-l-4 border-accent' : ''}">
+                    <p class="text-sm text-gray-400 mb-1">${r.username} ${r.level >= 2 ? '(Staff)' : ''} • ${new Date(r.created_at).toLocaleString()}</p>
+                    <p class="text-gray-300">${r.message}</p>
+                </div>
+            `).join('');
+            document.getElementById('modalReplies').innerHTML = repliesHtml;
+
+            if (currentUser?.level >= 2) {
+                document.getElementById('staffReplyForm').classList.remove('hidden');
+            } else {
+                document.getElementById('staffReplyForm').classList.add('hidden');
+            }
+
+            document.getElementById('ticketModal').classList.remove('hidden');
+            document.getElementById('ticketModal').classList.add('flex');
+        }
+
+        function closeTicketModal() {
+            document.getElementById('ticketModal').classList.add('hidden');
+            document.getElementById('ticketModal').classList.remove('flex');
+        }
+
+        async function sendReply() {
+            const message = document.getElementById('replyMessage').value;
+            const status = document.getElementById('replyStatus').value;
+
+            await fetch(`/api/support/${currentTicketId}/reply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, status: status || undefined })
+            });
+
+            document.getElementById('replyMessage').value = '';
+            document.getElementById('replyStatus').value = '';
+
+            if (currentUser?.level >= 2) loadAllTickets();
+            openTicket(currentTicketId);
+        }
+
+        document.getElementById('ticketForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch('/api/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: document.getElementById('ticketSubject').value,
+                    message: document.getElementById('ticketMessage').value
+                })
+            });
+            document.getElementById('ticketSubject').value = '';
+            document.getElementById('ticketMessage').value = '';
+            document.getElementById('ticketSuccess').classList.remove('hidden');
+            setTimeout(() => document.getElementById('ticketSuccess').classList.add('hidden'), 3000);
+            loadMyTickets();
+        });
+
+        document.getElementById('themeToggle').onclick = () => {
+            toggleTheme();
+            document.getElementById('themeToggle').querySelector('i').className =
+                getCurrentTheme() === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

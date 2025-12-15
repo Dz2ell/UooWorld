@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форум — UooWorld</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="/js/i18n.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        body.theme-light {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .navbar-blur {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .post-card {
+            transition: all 0.3s ease;
+        }
+
+        .post-card:hover {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .vote-btn {
+            transition: all 0.2s ease;
+        }
+
+        .vote-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .vote-btn.active-yes {
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .vote-btn.active-no {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .tag {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .tag:hover,
+        .tag.active {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        .modal {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: all 0.3s;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-blur border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-cube text-dark-900"></i>
+                </div>
+                <span class="text-xl font-bold">UooWorld</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 text-gray-400 hover:text-accent"><i
+                        class="fa-solid fa-moon"></i></button>
+                <a href="/" class="text-gray-300 hover:text-accent">Главная</a>
+                <a href="/wiki.html" class="text-gray-300 hover:text-accent">Wiki</a>
+                <a href="/support.html" class="text-gray-300 hover:text-accent">Поддержка</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-white flex items-center">
+                        <i class="fa-solid fa-comments text-accent mr-3"></i>Форум
+                    </h1>
+                    <p class="text-gray-400 mt-1">Голосования и обсуждения сообщества</p>
+                </div>
+                <button id="newPostBtn"
+                    class="hidden bg-accent hover:bg-accent-dark text-dark-900 px-4 py-2 rounded-xl font-semibold">
+                    <i class="fa-solid fa-plus mr-2"></i>Новая тема
+                </button>
+            </div>
+
+            <!-- Tags Filter -->
+            <div class="mb-6 flex flex-wrap gap-2">
+                <span class="tag px-3 py-1 rounded-full text-sm active" data-tag="all">Все</span>
+                <div id="tagsContainer"></div>
+            </div>
+
+            <!-- Admin: Manage Tags -->
+            <div id="adminTags" class="hidden mb-6 glass-card rounded-xl p-4">
+                <h3 class="text-sm font-semibold text-gray-400 mb-3">Управление тегами</h3>
+                <div class="flex items-center space-x-2">
+                    <input type="text" id="newTagInput" placeholder="Новый тег"
+                        class="input-field px-3 py-2 rounded-lg text-white text-sm flex-1">
+                    <button onclick="addNewTag()"
+                        class="bg-accent text-dark-900 px-4 py-2 rounded-lg font-semibold text-sm">+</button>
+                </div>
+            </div>
+
+            <!-- Posts List -->
+            <div id="postsList" class="space-y-4"></div>
+
+            <div id="emptyState" class="hidden text-center py-20">
+                <i class="fa-solid fa-inbox text-6xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 text-lg">Пока нет тем для голосования</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Post Modal -->
+    <div id="postModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="modal-content glass-card rounded-2xl w-full max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Новая тема для голосования</h2>
+                <button onclick="closePostModal()" class="text-gray-400 hover:text-white"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="postForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Заголовок</label>
+                    <input type="text" id="postTitle" class="input-field w-full px-4 py-3 rounded-xl text-white"
+                        placeholder="Построить фонтан на спавне?" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Описание</label>
+                    <textarea id="postContent" rows="4"
+                        class="input-field w-full px-4 py-3 rounded-xl text-white resize-none"
+                        placeholder="Подробное описание предложения..." required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Теги</label>
+                    <div id="postTagsSelect" class="flex flex-wrap gap-2"></div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-accent hover:bg-accent-dark text-dark-900 font-bold py-3 rounded-xl">
+                    Опубликовать
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div id="detailModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="modal-content glass-card rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white" id="detailTitle"></h2>
+                    <p class="text-sm text-gray-400 mt-1">
+                        <span id="detailAuthor"></span> • <span id="detailDate"></span>
+                        <span id="detailStatus" class="ml-2 px-2 py-0.5 rounded-full text-xs"></span>
+                    </p>
+                </div>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-white"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div id="detailTags" class="flex flex-wrap gap-2 mb-4"></div>
+
+            <div class="bg-dark-700/50 rounded-xl p-4 mb-6">
+                <p class="text-gray-300 whitespace-pre-wrap" id="detailContent"></p>
+            </div>
+
+            <!-- Voting -->
+            <div id="votingSection" class="flex items-center justify-center space-x-8 py-6 border-t border-white/10">
+                <div class="text-center">
+                    <button id="voteYesBtn"
+                        class="vote-btn w-16 h-16 rounded-full border-2 border-green-500/30 text-green-500 flex items-center justify-center text-2xl mb-2">
+                        <i class="fa-solid fa-check"></i>
+                    </button>
+                    <span id="votesYes" class="text-2xl font-bold text-green-500">0</span>
+                    <p class="text-xs text-gray-500">За</p>
+                </div>
+                <div class="text-center">
+                    <button id="voteNoBtn"
+                        class="vote-btn w-16 h-16 rounded-full border-2 border-red-500/30 text-red-500 flex items-center justify-center text-2xl mb-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <span id="votesNo" class="text-2xl font-bold text-red-500">0</span>
+                    <p class="text-xs text-gray-500">Против</p>
+                </div>
+            </div>
+
+            <!-- Vote progress bar -->
+            <div class="h-3 bg-dark-700 rounded-full overflow-hidden mb-4">
+                <div id="voteBar" class="h-full bg-gradient-to-r from-green-500 to-green-400 transition-all"
+                    style="width: 50%"></div>
+            </div>
+
+            <!-- Admin: Close -->
+            <div id="adminActions" class="hidden border-t border-white/10 pt-4 flex justify-end">
+                <button onclick="closeCurrentPost()"
+                    class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg font-semibold">
+                    <i class="fa-solid fa-lock mr-2"></i>Закрыть голосование
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let posts = [];
+        let allTags = [];
+        let selectedTags = [];
+        let currentFilter = 'all';
+        let currentPostId = null;
+
+        async function init() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                    if (currentUser.level >= 4) {
+                        document.getElementById('newPostBtn').classList.remove('hidden');
+                        document.getElementById('adminTags').classList.remove('hidden');
+                    }
+                }
+            } catch (e) { }
+
+            await loadTags();
+            await loadPosts();
+        }
+
+        async function loadTags() {
+            const res = await fetch('/api/tags');
+            const data = await res.json();
+            allTags = data.tags;
+            renderTags();
+        }
+
+        function renderTags() {
+            document.getElementById('tagsContainer').innerHTML = allTags.map(tag =>
+                `<span class="tag px-3 py-1 rounded-full text-sm" data-tag="${tag}" onclick="filterByTag('${tag}')">${tag}</span>`
+            ).join('');
+
+            // Post form tags
+            document.getElementById('postTagsSelect').innerHTML = allTags.map(tag => `
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" value="${tag}" class="post-tag-checkbox accent-accent">
+                    <span class="text-gray-300 text-sm">${tag}</span>
+                </label>
+            `).join('');
+        }
+
+        async function loadPosts() {
+            const res = await fetch('/api/forum');
+            const data = await res.json();
+            posts = data.posts;
+            renderPosts();
+        }
+
+        function renderPosts() {
+            const filtered = currentFilter === 'all'
+                ? posts
+                : posts.filter(p => p.tags.includes(currentFilter));
+
+            const container = document.getElementById('postsList');
+            const empty = document.getElementById('emptyState');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            container.innerHTML = filtered.map(p => {
+                const total = p.votes_yes + p.votes_no;
+                const percent = total > 0 ? Math.round((p.votes_yes / total) * 100) : 50;
+                const isClosed = p.status === 'closed';
+
+                return `
+                <div class="post-card glass-card rounded-xl p-5 cursor-pointer ${isClosed ? 'opacity-60' : ''}" onclick="openPost(${p.id})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                ${p.tags.map(t => `<span class="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">${t}</span>`).join('')}
+                                ${isClosed ? '<span class="text-xs bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded-full">Закрыто</span>' : ''}
+                            </div>
+                            <h3 class="text-lg font-semibold text-white mb-1">${p.title}</h3>
+                            <p class="text-sm text-gray-400">${p.author_name} • ${new Date(p.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div class="text-center ml-4">
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="text-green-500"><i class="fa-solid fa-check mr-1"></i>${p.votes_yes}</span>
+                                <span class="text-red-500"><i class="fa-solid fa-xmark mr-1"></i>${p.votes_no}</span>
+                            </div>
+                            <div class="w-24 h-2 bg-dark-700 rounded-full mt-2 overflow-hidden">
+                                <div class="h-full bg-green-500" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function filterByTag(tag) {
+            currentFilter = tag;
+            document.querySelectorAll('.tag').forEach(el => {
+                el.classList.toggle('active', el.dataset.tag === tag);
+            });
+            renderPosts();
+        }
+
+        // New Post Modal
+        document.getElementById('newPostBtn')?.addEventListener('click', () => {
+            document.getElementById('postModal').classList.add('show');
+        });
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('show');
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const tags = Array.from(document.querySelectorAll('.post-tag-checkbox:checked')).map(cb => cb.value);
+
+            await fetch('/api/forum', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: document.getElementById('postTitle').value,
+                    content: document.getElementById('postContent').value,
+                    tags
+                })
+            });
+
+            closePostModal();
+            document.getElementById('postForm').reset();
+            loadPosts();
+        });
+
+        // Detail Modal
+        async function openPost(id) {
+            currentPostId = id;
+            const res = await fetch(`/api/forum/${id}`);
+            const data = await res.json();
+            const post = data.post;
+
+            document.getElementById('detailTitle').textContent = post.title;
+            document.getElementById('detailContent').textContent = post.content;
+            document.getElementById('detailAuthor').textContent = post.author_name;
+            document.getElementById('detailDate').textContent = new Date(post.created_at).toLocaleDateString();
+
+            const status = document.getElementById('detailStatus');
+            if (post.status === 'closed') {
+                status.textContent = 'Закрыто';
+                status.className = 'ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-500/20 text-gray-400';
+                document.getElementById('votingSection').classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                status.textContent = 'Открыто';
+                status.className = 'ml-2 px-2 py-0.5 rounded-full text-xs bg-green-500/20 text-green-400';
+                document.getElementById('votingSection').classList.remove('opacity-50', 'pointer-events-none');
+            }
+
+            document.getElementById('detailTags').innerHTML = post.tags.map(t =>
+                `<span class="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded-full">${t}</span>`
+            ).join('');
+
+            updateVoteDisplay(post);
+
+            // Check my vote
+            const myVote = post.voters.find(v => v.userId === currentUser?.id);
+            document.getElementById('voteYesBtn').classList.toggle('active-yes', myVote?.vote === 'yes');
+            document.getElementById('voteNoBtn').classList.toggle('active-no', myVote?.vote === 'no');
+
+            // Admin actions
+            if (currentUser?.level >= 4 && post.status !== 'closed') {
+                document.getElementById('adminActions').classList.remove('hidden');
+            } else {
+                document.getElementById('adminActions').classList.add('hidden');
+            }
+
+            document.getElementById('detailModal').classList.add('show');
+        }
+
+        function updateVoteDisplay(post) {
+            const total = post.votes_yes + post.votes_no;
+            const percent = total > 0 ? Math.round((post.votes_yes / total) * 100) : 50;
+
+            document.getElementById('votesYes').textContent = post.votes_yes;
+            document.getElementById('votesNo').textContent = post.votes_no;
+            document.getElementById('voteBar').style.width = percent + '%';
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('show');
+        }
+
+        async function vote(choice) {
+            if (!currentUser) {
+                alert('Войдите, чтобы голосовать');
+                return;
+            }
+
+            const res = await fetch(`/api/forum/${currentPostId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vote: choice })
+            });
+
+            const data = await res.json();
+            if (data.post) {
+                updateVoteDisplay(data.post);
+                document.getElementById('voteYesBtn').classList.toggle('active-yes', choice === 'yes');
+                document.getElementById('voteNoBtn').classList.toggle('active-no', choice === 'no');
+                loadPosts();
+            }
+        }
+
+        document.getElementById('voteYesBtn').addEventListener('click', () => vote('yes'));
+        document.getElementById('voteNoBtn').addEventListener('click', () => vote('no'));
+
+        async function closeCurrentPost() {
+            if (!confirm('Закрыть голосование?')) return;
+            await fetch(`/api/forum/${currentPostId}/close`, { method: 'PUT' });
+            closeDetailModal();
+            loadPosts();
+        }
+
+        async function addNewTag() {
+            const tag = document.getElementById('newTagInput').value.trim();
+            if (!tag) return;
+            await fetch('/api/tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag })
+            });
+            document.getElementById('newTagInput').value = '';
+            loadTags();
+        }
+
+        document.getElementById('themeToggle').onclick = () => {
+            toggleTheme();
+            document.getElementById('themeToggle').querySelector('i').className =
+                getCurrentTheme() === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        };
+
+        init();
+    </script>
+</body>
+
+</html>

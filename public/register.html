@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация — UooWorld</title>
+    <meta name="description" content="Создайте аккаунт UooWorld">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80', glow: '#10b981' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glow-green {
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.1);
+        }
+
+        .grid-pattern {
+            background-image:
+                linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+    </style>
+</head>
+
+<body class="grid-pattern flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <a href="/" class="flex items-center justify-center space-x-3 mb-8">
+            <div
+                class="w-12 h-12 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center glow-green">
+                <i class="fa-solid fa-cube text-dark-900 text-xl"></i>
+            </div>
+            <span
+                class="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">UooWorld</span>
+        </a>
+
+        <!-- Register Form Card -->
+        <div class="glass-card rounded-2xl p-8">
+            <h1 class="text-2xl font-bold text-white text-center mb-2">Создать аккаунт</h1>
+            <p class="text-gray-400 text-center mb-8">Присоединяйся к сообществу UooWorld</p>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden error-message rounded-xl p-4 mb-6">
+                <p class="text-red-400 text-sm text-center" id="errorText"></p>
+            </div>
+
+            <form id="registerForm" class="space-y-5">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-300 mb-2">Имя пользователя</label>
+                    <input type="text" id="username" name="username" required minlength="3"
+                        class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                        placeholder="Player123">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input type="email" id="email" name="email" required
+                        class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                        placeholder="your@email.com">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Пароль</label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required minlength="6"
+                            class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                            placeholder="Минимум 6 символов">
+                        <button type="button" id="togglePassword"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-accent">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-300 mb-2">Подтвердите
+                        пароль</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required
+                        class="input-field w-full px-4 py-3 rounded-xl text-white placeholder-gray-500"
+                        placeholder="Повторите пароль">
+                </div>
+
+                <button type="submit" id="submitBtn"
+                    class="btn-primary w-full bg-accent hover:bg-accent-dark text-dark-900 font-bold py-3 px-6 rounded-xl flex items-center justify-center space-x-2">
+                    <span>Зарегистрироваться</span>
+                    <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-400">
+                    Уже есть аккаунт?
+                    <a href="/login.html" class="text-accent hover:text-accent-light font-medium">Войти</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Back to home -->
+        <div class="mt-6 text-center">
+            <a href="/" class="text-gray-500 hover:text-gray-300 text-sm flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Вернуться на главную</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const submitBtn = document.getElementById('submitBtn');
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', () => {
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+            togglePassword.querySelector('i').classList.toggle('fa-eye');
+            togglePassword.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                showError('Пароли не совпадают');
+                return;
+            }
+
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Регистрация...</span>';
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Redirect to profile
+                    window.location.href = '/profile.html';
+                } else {
+                    showError(data.error || 'Ошибка регистрации');
+                }
+            } catch (err) {
+                showError('Ошибка подключения к серверу');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Зарегистрироваться</span> <i class="fa-solid fa-user-plus"></i>';
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Check if already logged in
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    window.location.href = '/profile.html';
+                }
+            } catch (err) { }
+        }
+        checkAuth();
+    </script>
+</body>
+
+</html>

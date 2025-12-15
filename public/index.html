@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UooWorld — Приватный Ванильный Сервер Minecraft</title>
+    <meta name="description"
+        content="UooWorld — приватный ванильный сервер Minecraft. Чистое выживание, доверие и атмосфера.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="/js/i18n.js"></script>
+    <script src="/js/auth-panel.js" defer></script>
+    <script src="/js/settings-panel.js" defer></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80', glow: '#10b981' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        body.theme-light {
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .theme-light .text-white {
+            color: #1e293b !important;
+        }
+
+        .theme-light .text-gray-300 {
+            color: #475569 !important;
+        }
+
+        .theme-light .text-gray-400 {
+            color: #64748b !important;
+        }
+
+        .theme-light .text-gray-500 {
+            color: #94a3b8 !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #22c55e;
+            border-radius: 4px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(34, 197, 94, 0.3);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(34, 197, 94, 0.15);
+        }
+
+        .glow-green {
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.3), 0 0 60px rgba(34, 197, 94, 0.1);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 40px rgba(34, 197, 94, 0.5);
+        }
+
+        .hero-bg {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #22c55e;
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.3;
+            }
+
+            90% {
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: translateY(-100vh);
+                opacity: 0;
+            }
+        }
+
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-secondary {
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: #22c55e;
+            color: #22c55e;
+            transform: translateY(-2px);
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: #22c55e;
+            color: #0a0a0a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            white-space: nowrap;
+            z-index: 50;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #22c55e;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .step-number {
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover .step-number {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+        }
+
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .navbar-blur {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .feature-icon {
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .grid-pattern {
+            background-image:
+                linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown:hover .dropdown-menu,
+        .dropdown-menu:hover {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body class="grid-pattern">
+    <!-- Floating Particles -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 40%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 3s;"></div>
+        <div class="particle" style="left: 60%; animation-delay: 5s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 2.5s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 4.5s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 1.5s;"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-blur border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+
+                <!-- Left: Logo -->
+                <a href="/" class="flex items-center space-x-3 group shrink-0">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center glow-green group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-cube text-dark-900 text-lg"></i>
+                    </div>
+                    <span
+                        class="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent hidden sm:inline">UooWorld</span>
+                </a>
+
+                <!-- Center: Navigation -->
+                <div class="hidden md:flex items-center space-x-1 lg:space-x-2">
+                    <a href="/"
+                        class="px-3 py-2 rounded-lg text-accent font-medium hover:bg-accent/10 transition-colors"
+                        data-i18n="nav_home">Главная</a>
+                    <a href="/wiki.html"
+                        class="px-3 py-2 rounded-lg text-gray-300 hover:text-accent hover:bg-accent/10 transition-colors">Wiki</a>
+                    <a href="/forum.html"
+                        class="px-3 py-2 rounded-lg text-gray-300 hover:text-accent hover:bg-accent/10 transition-colors">Форум</a>
+                    <a href="/support.html"
+                        class="px-3 py-2 rounded-lg text-gray-300 hover:text-accent hover:bg-accent/10 transition-colors">Поддержка</a>
+                    <a href="/rules.html"
+                        class="px-3 py-2 rounded-lg text-gray-300 hover:text-accent hover:bg-accent/10 transition-colors"
+                        data-i18n="nav_rules">Правила</a>
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="px-3 py-2 rounded-lg text-gray-300 hover:text-accent hover:bg-accent/10 transition-colors">
+                        <i class="fa-brands fa-discord mr-1"></i>Discord
+                    </a>
+                </div>
+
+                <!-- Right: Controls -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Server Status -->
+                    <div id="serverStatus"
+                        class="hidden lg:flex items-center space-x-2 bg-dark-700/50 px-3 py-1.5 rounded-lg border border-white/5">
+                        <span class="w-2 h-2 rounded-full bg-gray-500" id="statusDot"></span>
+                        <span class="text-sm text-gray-400" id="statusText">...</span>
+                    </div>
+
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle" class="p-2 text-gray-400 hover:text-accent transition-colors"
+                        title="Toggle theme">
+                        <i class="fa-solid fa-moon text-lg"></i>
+                    </button>
+
+                    <!-- Language Dropdown -->
+                    <div class="dropdown relative">
+                        <button
+                            class="flex items-center space-x-1 p-2 text-gray-400 hover:text-accent transition-colors">
+                            <span id="currentLangFlag">🇷🇺</span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div
+                            class="dropdown-menu absolute right-0 top-full mt-2 bg-dark-700 border border-white/10 rounded-xl overflow-hidden min-w-32 z-50">
+                            <button onclick="changeLang('ru')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2 text-gray-300">
+                                <span>🇷🇺</span><span>Русский</span>
+                            </button>
+                            <button onclick="changeLang('en')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2 text-gray-300">
+                                <span>🇬🇧</span><span>English</span>
+                            </button>
+                            <button onclick="changeLang('uk')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2 text-gray-300">
+                                <span>🇺🇦</span><span>Українська</span>
+                            </button>
+                            <button onclick="changeLang('lv')"
+                                class="w-full px-4 py-2 text-left hover:bg-accent/20 flex items-center space-x-2 text-gray-300">
+                                <span>🇱🇻</span><span>Latviešu</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Auth buttons (desktop) -->
+                    <div id="authButtons" class="hidden md:block">
+                        <button onclick="openAuthPanel('login')"
+                            class="btn-primary bg-accent hover:bg-accent-dark text-dark-900 px-4 py-2 rounded-xl font-semibold text-sm"
+                            data-i18n="nav_login">Войти</button>
+                    </div>
+                    <div id="userMenu" class="hidden md:flex items-center space-x-2">
+                        <a href="/profile.html"
+                            class="flex items-center space-x-2 text-gray-300 hover:text-accent transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-br from-accent to-accent-dark rounded-lg flex items-center justify-center text-dark-900 font-bold text-sm"
+                                id="avatarSmall">?</div>
+                            <span id="usernameDisplay" class="font-medium hidden lg:inline"></span>
+                        </a>
+                        <button onclick="openSettingsPanel()"
+                            class="text-gray-400 hover:text-accent transition-colors p-1" title="Настройки">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <button id="logoutBtn" class="text-gray-400 hover:text-red-400 transition-colors p-1"
+                            title="Выйти">
+                            <i class="fa-solid fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button id="menuBtn" class="md:hidden p-2 text-gray-300 hover:text-accent transition-colors">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Mobile Menu -->
+        <div id="mobileMenu"
+            class="mobile-menu fixed top-0 right-0 h-screen w-72 bg-dark-800 border-l border-white/5 md:hidden z-50">
+            <div class="p-6">
+                <button id="closeMenuBtn"
+                    class="absolute top-6 right-6 text-gray-300 hover:text-accent transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+                <div class="mt-12 flex flex-col space-y-6">
+                    <a href="/" class="text-lg text-accent font-medium" data-i18n="nav_home">Главная</a>
+                    <a href="/wiki.html" class="text-lg text-gray-300 hover:text-accent transition-colors">Wiki</a>
+                    <a href="/forum.html" class="text-lg text-gray-300 hover:text-accent transition-colors">Форум</a>
+                    <a href="/support.html"
+                        class="text-lg text-gray-300 hover:text-accent transition-colors">Поддержка</a>
+                    <a href="/rules.html" class="text-lg text-gray-300 hover:text-accent transition-colors"
+                        data-i18n="nav_rules">Правила</a>
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="text-lg text-gray-300 hover:text-accent transition-colors">Discord</a>
+                    <div id="mobileAuthButtons">
+                        <button onclick="closeMenu(); openAuthPanel('login')"
+                            class="btn-primary bg-accent hover:bg-accent-dark text-dark-900 px-6 py-3 rounded-xl font-semibold text-center block w-full"
+                            data-i18n="nav_login">Войти</button>
+                    </div>
+                    <div id="mobileUserMenu" class="hidden space-y-4">
+                        <a href="/profile.html" class="flex items-center space-x-2 text-accent font-medium">
+                            <i class="fa-solid fa-user-circle text-xl"></i>
+                            <span id="mobileUsernameDisplay"></span>
+                        </a>
+                        <button id="mobileLogoutBtn" class="flex items-center space-x-2 text-red-400">
+                            <i class="fa-solid fa-sign-out-alt"></i>
+                            <span data-i18n="nav_logout">Выйти</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="menuOverlay"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm opacity-0 invisible transition-all duration-300 z-40 md:hidden">
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center justify-center relative pt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 relative z-10">
+            <div class="text-center">
+                <div
+                    class="inline-flex items-center space-x-2 bg-accent/10 border border-accent/20 rounded-full px-4 py-2 mb-8 reveal">
+                    <span class="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                    <span class="text-accent text-sm font-medium" data-i18n="hero_badge">Сервер онлайн</span>
+                </div>
+
+                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-6 reveal"
+                    style="animation-delay: 0.1s;">
+                    <span class="bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent"
+                        data-i18n="hero_title">UooWorld</span>
+                    <span class="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl mt-2 text-gray-400 font-semibold"
+                        data-i18n="hero_subtitle">Приватный Ванильный Сервер</span>
+                </h1>
+
+                <p class="text-lg sm:text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 reveal"
+                    style="animation-delay: 0.2s;">
+                    <span data-i18n="hero_desc">Чистое выживание, доверие и атмосфера.</span><br
+                        class="hidden sm:block">
+                    <span class="text-accent" data-i18n="hero_desc2">Твой новый дом в мире кубов.</span>
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 reveal"
+                    style="animation-delay: 0.3s;">
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="btn-primary w-full sm:w-auto bg-accent hover:bg-accent-dark text-dark-900 px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center space-x-2 glow-green">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span data-i18n="hero_apply">Подать заявку</span>
+                    </a>
+                    <button id="copyIpBtn"
+                        class="btn-secondary relative w-full sm:w-auto border-2 border-gray-600 text-gray-300 px-8 py-4 rounded-xl font-bold text-lg flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-copy"></i>
+                        <span data-i18n="hero_copy_ip">Скопировать IP</span>
+                        <span id="copyTooltip" class="tooltip">Скопировано!</span>
+                    </button>
+                </div>
+
+                <div class="mt-8 reveal" style="animation-delay: 0.4s;">
+                    <p class="text-gray-500 text-sm" data-i18n="hero_server_ip">IP адрес сервера</p>
+                    <p class="text-xl sm:text-2xl font-mono text-accent text-glow mt-1">play.uooworld.net</p>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <i class="fa-solid fa-chevron-down text-accent text-2xl opacity-50"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 sm:py-32 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                    <span class="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+                        data-i18n="features_title">Почему UooWorld?</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto" data-i18n="features_desc">Мы создали идеальное место
+                    для настоящих любителей ванильного Minecraft</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                <div class="glass-card rounded-2xl p-8 reveal" style="animation-delay: 0.1s;">
+                    <div
+                        class="feature-icon w-16 h-16 bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-leaf text-accent text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="feature_vanilla_title">Vanilla Experience
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed" data-i18n="feature_vanilla_desc">Чистый геймплей без
+                        надоедливых плагинов. Только ты, твои друзья и бесконечный мир возможностей.</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-8 reveal" style="animation-delay: 0.2s;">
+                    <div
+                        class="feature-icon w-16 h-16 bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-shield-halved text-accent text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="feature_private_title">Private Community
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed" data-i18n="feature_private_desc">Только по whitelist.
+                        Каждый игрок проходит проверку, чтобы сохранить дружелюбную атмосферу.</p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-8 reveal" style="animation-delay: 0.3s;">
+                    <div
+                        class="feature-icon w-16 h-16 bg-gradient-to-br from-accent/20 to-accent/5 rounded-2xl flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-bolt text-accent text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="feature_stable_title">Stable Performance
+                    </h3>
+                    <p class="text-gray-400 leading-relaxed" data-i18n="feature_stable_desc">Стабильные 20 TPS на мощном
+                        железе. Никаких лагов и зависаний — только плавный геймплей.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Join Section -->
+    <section id="join" class="py-20 sm:py-32 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+                    <span class="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+                        data-i18n="join_title">Как присоединиться?</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto" data-i18n="join_desc">Всего три простых шага, чтобы
+                    стать частью нашего сообщества</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 relative">
+                <div
+                    class="hidden md:block absolute top-16 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-accent/50 via-accent to-accent/50">
+                </div>
+
+                <div class="step-card text-center reveal" style="animation-delay: 0.1s;">
+                    <div
+                        class="step-number relative inline-flex items-center justify-center w-16 h-16 bg-accent text-dark-900 rounded-full text-2xl font-bold mb-6 glow-green">
+                        1</div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="join_step1_title">Присоединись к Discord
+                    </h3>
+                    <p class="text-gray-400 mb-6" data-i18n="join_step1_desc">Заходи на наш Discord сервер — это главное
+                        место общения нашего комьюнити.</p>
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="inline-flex items-center space-x-2 text-accent hover:text-accent-light transition-colors font-medium">
+                        <i class="fa-brands fa-discord"></i>
+                        <span>Discord</span>
+                    </a>
+                </div>
+
+                <div class="step-card text-center reveal" style="animation-delay: 0.2s;">
+                    <div
+                        class="step-number relative inline-flex items-center justify-center w-16 h-16 bg-accent text-dark-900 rounded-full text-2xl font-bold mb-6 glow-green">
+                        2</div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="join_step2_title">Подай заявку</h3>
+                    <p class="text-gray-400 mb-6" data-i18n="join_step2_desc">Заполни короткую анкету в специальном
+                        канале. Расскажи немного о себе.</p>
+                    <span class="inline-flex items-center space-x-2 text-gray-500 font-medium">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>#заявки</span>
+                    </span>
+                </div>
+
+                <div class="step-card text-center reveal" style="animation-delay: 0.3s;">
+                    <div
+                        class="step-number relative inline-flex items-center justify-center w-16 h-16 bg-accent text-dark-900 rounded-full text-2xl font-bold mb-6 glow-green">
+                        3</div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="join_step3_title">Получи доступ</h3>
+                    <p class="text-gray-400 mb-6" data-i18n="join_step3_desc">После одобрения заявки ты получишь
+                        whitelist и сможешь зайти на сервер.</p>
+                    <span class="inline-flex items-center space-x-2 text-gray-500 font-medium">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span>~24h</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center reveal" style="animation-delay: 0.4s;">
+                <div class="glass-card inline-block rounded-2xl p-8 sm:p-10">
+                    <p class="text-gray-300 text-lg mb-6" data-i18n="join_cta">Готов начать своё приключение?</p>
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="btn-primary inline-flex items-center space-x-3 bg-accent hover:bg-accent-dark text-dark-900 px-8 py-4 rounded-xl font-bold text-lg glow-green">
+                        <i class="fa-brands fa-discord text-xl"></i>
+                        <span data-i18n="join_discord">Присоединиться к Discord</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-cube text-dark-900"></i>
+                        </div>
+                        <span class="text-xl font-bold text-white">UooWorld</span>
+                    </div>
+                    <span class="text-gray-500 text-sm">© 2024 <span data-i18n="footer_rights">Все права
+                            защищены</span></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="https://discord.gg/qqPYusFe9b" target="_blank"
+                        class="w-10 h-10 bg-dark-700 hover:bg-accent/20 border border-white/5 hover:border-accent/30 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent transition-all">
+                        <i class="fa-brands fa-discord"></i>
+                    </a>
+                    <a href="#"
+                        class="w-10 h-10 bg-dark-700 hover:bg-accent/20 border border-white/5 hover:border-accent/30 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent transition-all">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
+                    <a href="#"
+                        class="w-10 h-10 bg-dark-700 hover:bg-accent/20 border border-white/5 hover:border-accent/30 rounded-xl flex items-center justify-center text-gray-400 hover:text-accent transition-all">
+                        <i class="fa-brands fa-telegram"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auth check
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.ok) {
+                    const data = await response.json();
+                    showUserMenu(data.user);
+                }
+            } catch (err) { }
+        }
+
+        function showUserMenu(user) {
+            // Need to remove md:block to properly hide
+            const authBtns = document.getElementById('authButtons');
+            authBtns.classList.add('hidden');
+            authBtns.classList.remove('md:block');
+
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('userMenu').classList.add('flex');
+            document.getElementById('usernameDisplay').textContent = user.username;
+            document.getElementById('avatarSmall').textContent = user.username.charAt(0).toUpperCase();
+
+            document.getElementById('mobileAuthButtons').classList.add('hidden');
+            document.getElementById('mobileUserMenu').classList.remove('hidden');
+            document.getElementById('mobileUsernameDisplay').textContent = user.username;
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.reload();
+        }
+
+        document.getElementById('logoutBtn')?.addEventListener('click', logout);
+        document.getElementById('mobileLogoutBtn')?.addEventListener('click', logout);
+        checkAuth();
+
+        // Theme
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            toggleTheme();
+            updateThemeIcon();
+        });
+
+        function updateThemeIcon() {
+            const icon = themeToggle.querySelector('i');
+            icon.className = getCurrentTheme() === 'dark' ? 'fa-solid fa-moon text-lg' : 'fa-solid fa-sun text-lg';
+        }
+        updateThemeIcon();
+
+        // Language
+        function changeLang(lang) {
+            setLang(lang);
+            updateLangFlag();
+        }
+
+        function updateLangFlag() {
+            const flags = { ru: '🇷🇺', en: '🇬🇧', uk: '🇺🇦', lv: '🇱🇻' };
+            document.getElementById('currentLangFlag').textContent = flags[getCurrentLang()] || '🇷🇺';
+        }
+        updateLangFlag();
+
+        // Server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('https://api.mcsrvstat.us/3/play.uooworld.net');
+                const data = await response.json();
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                if (data.online) {
+                    dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                    text.textContent = `${data.players?.online || 0} ${t('status_players')}`;
+                    text.className = 'text-sm text-green-400';
+                } else {
+                    dot.className = 'w-2 h-2 rounded-full bg-red-500';
+                    text.textContent = t('status_offline');
+                    text.className = 'text-sm text-red-400';
+                }
+            } catch (err) { }
+        }
+        checkServerStatus();
+
+        // Copy IP
+        const copyIpBtn = document.getElementById('copyIpBtn');
+        const copyTooltip = document.getElementById('copyTooltip');
+        copyIpBtn.addEventListener('click', async () => {
+            await navigator.clipboard.writeText('play.uooworld.net');
+            copyTooltip.textContent = t('hero_copied');
+            copyTooltip.classList.add('show');
+            setTimeout(() => copyTooltip.classList.remove('show'), 2000);
+        });
+
+        // Mobile menu
+        const menuBtn = document.getElementById('menuBtn');
+        const closeMenuBtn = document.getElementById('closeMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+
+        function openMenu() {
+            mobileMenu.classList.add('open');
+            menuOverlay.classList.remove('opacity-0', 'invisible');
+            menuOverlay.classList.add('opacity-100', 'visible');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeMenu() {
+            mobileMenu.classList.remove('open');
+            menuOverlay.classList.add('opacity-0', 'invisible');
+            menuOverlay.classList.remove('opacity-100', 'visible');
+            document.body.style.overflow = '';
+        }
+        menuBtn.addEventListener('click', openMenu);
+        closeMenuBtn.addEventListener('click', closeMenu);
+        menuOverlay.addEventListener('click', closeMenu);
+        mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
+
+        // Reveal on scroll
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOnScroll = () => {
+            revealElements.forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight - 100) {
+                    el.classList.add('active');
+                }
+            });
+        };
+        revealOnScroll();
+        window.addEventListener('scroll', revealOnScroll);
+    </script>
+</body>
+
+</html>

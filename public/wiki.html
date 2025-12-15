@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki — UooWorld</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="/js/i18n.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#0a0a0a', 800: '#121212', 700: '#1a1a1a', 600: '#242424' },
+                        accent: { DEFAULT: '#22c55e', dark: '#16a34a', light: '#4ade80' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        body.theme-light {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-blur {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+        }
+
+        .theme-light .navbar-blur {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .craft-card {
+            transition: all 0.3s ease;
+        }
+
+        .craft-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .modal {
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: all 0.3s;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-blur border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-accent to-accent-dark rounded-xl flex items-center justify-center">
+                    <i class="fa-solid fa-cube text-dark-900"></i>
+                </div>
+                <span class="text-xl font-bold">UooWorld</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="p-2 text-gray-400 hover:text-accent"><i
+                        class="fa-solid fa-moon"></i></button>
+                <a href="/" class="text-gray-300 hover:text-accent">Главная</a>
+                <a href="/forum.html" class="text-gray-300 hover:text-accent">Форум</a>
+                <a href="/support.html" class="text-gray-300 hover:text-accent">Поддержка</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-12 px-4">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-white flex items-center">
+                        <i class="fa-solid fa-book text-accent mr-3"></i>
+                        Wiki — Кастомные крафты
+                    </h1>
+                    <p class="text-gray-400 mt-2">Все уникальные рецепты сервера</p>
+                </div>
+                <button id="addCraftBtn"
+                    class="hidden bg-accent hover:bg-accent-dark text-dark-900 px-4 py-2 rounded-xl font-semibold">
+                    <i class="fa-solid fa-plus mr-2"></i>Добавить
+                </button>
+            </div>
+
+            <!-- Crafts Grid -->
+            <div id="craftsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Loaded dynamically -->
+            </div>
+
+            <div id="emptyState" class="hidden text-center py-20">
+                <i class="fa-solid fa-box-open text-6xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 text-lg">Пока нет кастомных крафтов</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="craftModal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div class="modal-content glass-card rounded-2xl w-full max-w-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold" id="modalTitle">Новый крафт</h2>
+                <button id="closeModal" class="text-gray-400 hover:text-white"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="craftForm" class="space-y-4">
+                <input type="hidden" id="craftId">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Название</label>
+                    <input type="text" id="craftTitle"
+                        class="w-full bg-dark-700 border border-white/10 rounded-lg px-4 py-2 text-white" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Описание</label>
+                    <textarea id="craftDesc" rows="4"
+                        class="w-full bg-dark-700 border border-white/10 rounded-lg px-4 py-2 text-white resize-none"
+                        required></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">URL изображения (опционально)</label>
+                    <input type="text" id="craftImage"
+                        class="w-full bg-dark-700 border border-white/10 rounded-lg px-4 py-2 text-white"
+                        placeholder="https://...">
+                </div>
+                <button type="submit"
+                    class="w-full bg-accent hover:bg-accent-dark text-dark-900 font-bold py-3 rounded-xl">
+                    Сохранить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let crafts = [];
+
+        async function checkAuth() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user;
+                    if (currentUser.level >= 3) {
+                        document.getElementById('addCraftBtn').classList.remove('hidden');
+                    }
+                }
+            } catch (e) { }
+        }
+
+        async function loadCrafts() {
+            const res = await fetch('/api/wiki');
+            const data = await res.json();
+            crafts = data.crafts;
+            renderCrafts();
+        }
+
+        function renderCrafts() {
+            const grid = document.getElementById('craftsGrid');
+            const empty = document.getElementById('emptyState');
+
+            if (crafts.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = crafts.map(c => `
+                <div class="craft-card glass-card rounded-xl overflow-hidden">
+                    ${c.image_url ? `<img src="${c.image_url}" class="w-full h-40 object-cover">` :
+                    `<div class="w-full h-40 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                        <i class="fa-solid fa-hammer text-4xl text-accent/50"></i>
+                    </div>`}
+                    <div class="p-4">
+                        <h3 class="font-bold text-white mb-2">${c.title}</h3>
+                        <p class="text-gray-400 text-sm line-clamp-2">${c.description}</p>
+                        ${currentUser?.level >= 3 ? `
+                        <div class="mt-4 flex space-x-2">
+                            <button onclick="editCraft(${c.id})" class="text-sm text-accent hover:underline">
+                                <i class="fa-solid fa-edit mr-1"></i>Редактировать
+                            </button>
+                            ${currentUser?.level >= 4 ? `
+                            <button onclick="deleteCraft(${c.id})" class="text-sm text-red-400 hover:underline">
+                                <i class="fa-solid fa-trash mr-1"></i>Удалить
+                            </button>` : ''}
+                        </div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Modal
+        const modal = document.getElementById('craftModal');
+        document.getElementById('addCraftBtn').onclick = () => {
+            document.getElementById('craftId').value = '';
+            document.getElementById('craftTitle').value = '';
+            document.getElementById('craftDesc').value = '';
+            document.getElementById('craftImage').value = '';
+            document.getElementById('modalTitle').textContent = 'Новый крафт';
+            modal.classList.add('show');
+        };
+        document.getElementById('closeModal').onclick = () => modal.classList.remove('show');
+        modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
+
+        function editCraft(id) {
+            const craft = crafts.find(c => c.id === id);
+            if (!craft) return;
+            document.getElementById('craftId').value = craft.id;
+            document.getElementById('craftTitle').value = craft.title;
+            document.getElementById('craftDesc').value = craft.description;
+            document.getElementById('craftImage').value = craft.image_url || '';
+            document.getElementById('modalTitle').textContent = 'Редактировать крафт';
+            modal.classList.add('show');
+        }
+
+        async function deleteCraft(id) {
+            if (!confirm('Удалить крафт?')) return;
+            await fetch(`/api/wiki/${id}`, { method: 'DELETE' });
+            loadCrafts();
+        }
+
+        document.getElementById('craftForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('craftId').value;
+            const body = {
+                title: document.getElementById('craftTitle').value,
+                description: document.getElementById('craftDesc').value,
+                image_url: document.getElementById('craftImage').value || null
+            };
+
+            if (id) {
+                await fetch(`/api/wiki/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            } else {
+                await fetch('/api/wiki', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            }
+
+            modal.classList.remove('show');
+            loadCrafts();
+        };
+
+        // Theme
+        document.getElementById('themeToggle').onclick = () => {
+            toggleTheme();
+            document.getElementById('themeToggle').querySelector('i').className =
+                getCurrentTheme() === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        };
+
+        checkAuth();
+        loadCrafts();
+    </script>
+</body>
+
+</html>
